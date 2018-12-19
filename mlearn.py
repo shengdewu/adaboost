@@ -14,14 +14,22 @@ class adaboost(object):
         sampleNum, featNum= np.mat(dataMat).shape
         weight = np.mat(np.ones((sampleNum,1))/sampleNum)
         precClass = []
+        aggClass =np.mat(np.zeros((sampleNum, 1)))
         for iter in range(iterNum):
-            stump = self.buildStump(dataMat, dataLabel,weight)
-            alph = 0.5 * np.log((1-stump['bestErr'])/max(stump['bestErr'], 1e-16))
-            stump['alph'] = alph #弱分类器权重
-            expon = np.exp(np.multiply(-1 * alph * stump['bestClass'], np.mat(dataLabel).T))
+            bestStump = self.buildStump(dataMat, dataLabel,weight)
+            alph = float(0.5 * np.log((1-bestStump['err'])/max(bestStump['err'], 1e-16)))
+            bestStump['alph'] = alph #弱分类器权重
+            precClass.append(bestStump)
+            expon = np.exp(np.multiply(-1 * alph * bestStump['class'], np.mat(dataLabel).T))
             z = np.multiply(expon, weight)
             weight = z/np.sum(z)
-            precClass.append(stump)
+            aggClass += alph * bestStump['class']
+            print(str('weight {} \n bestClass{}\n aggClass').format(weight.T, bestStump['class'].T, aggClass.T))
+            aggErr = np.multiply(np.sign(aggClass) != np.mat(dataLabel).T, np.ones((sampleNum,1)))
+            errRate = aggErr.sum() / sampleNum
+            print(str('total err{}\n').format(errRate))
+            if errRate == 0.0:
+                break
         return precClass
 
     def buildStump(self, dataTrain, dataLabel, weight):
@@ -38,20 +46,20 @@ class adaboost(object):
             max = dataMat[:,c_dim].max()
             min = dataMat[:,c_dim].min()
             stepSize = float(max - min) / sampleNum
-            for step in range(1, sampleNum-1):
+            for step in range(-1, sampleNum+1): #这个步长影响大
                 for method in ['lt', 'gt']:
                     thres = float(min) + float(step) * stepSize
                     predictClass = self.__caclClass__(dataMat, c_dim, thres, method)
                     errArr = np.mat(np.ones((5, 1))) #numpy 的array和mat 差飞了 不要混合运算
                     errArr[predictClass == labelMat.T] = 0
                     err = errArr.T*weight
-                    if bestErr > err[0,0]:
-                        bestErr = err[0,0]
-                        stump['bestErr'] = bestErr
-                        stump['bestDim'] = c_dim
-                        stump['bestMethod'] = method
-                        stump['bestThres'] = thres
-                        stump['bestClass'] = predictClass.copy()
+                    if bestErr > err:
+                        bestErr = err
+                        stump['err'] = bestErr
+                        stump['dim'] = c_dim
+                        stump['ineq'] = method
+                        stump['thresh'] = thres
+                        stump['class'] = predictClass.copy()
         return stump
 
     def __caclClass__(self, dataMat, dim, thres, method):
