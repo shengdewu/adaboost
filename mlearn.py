@@ -32,6 +32,19 @@ class adaboost(object):
                 break
         return precClass
 
+    def predicte(self, data, classFilterArr):
+        dataMat = np.mat(data)
+        sampleNum, featNum = dataMat.shape
+
+        aggClass = np.mat(np.zeros((sampleNum,1)))
+
+        for classFilter in classFilterArr:
+            stmpClass = self.__caclClass__(dataMat, classFilter['dim'], classFilter['thresh'], classFilter['ineq'])
+            aggClass += np.mat(stmpClass) * classFilter['alph']
+
+        return np.sign(aggClass)
+
+
     def buildStump(self, dataTrain, dataLabel, weight):
         '''
         遍历每一个纬度，计算最小分类误差

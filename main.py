@@ -8,6 +8,7 @@ if __name__ == '__main__':
     # bestMethod = alg_ada.buildStump(dataMat, labelMat, wight)
     #print(bestMethod)
 
-    precClass = alg_ada.train(dataMat, labelMat)
+    classFilterArr = alg_ada.train(dataMat, labelMat)
+    preClass = alg_ada.predicte(dataMat, classFilterArr)
 
-    print(precClass)
+    print(preClass)
