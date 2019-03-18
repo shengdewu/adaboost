@@ -63,7 +63,7 @@ class adaboost(object):
                 for method in ['lt', 'gt']:
                     thres = float(min) + float(step) * stepSize
                     predictClass = self.__caclClass__(dataMat, c_dim, thres, method)
-                    errArr = np.mat(np.ones((5, 1))) #numpy 的array和mat 差飞了 不要混合运算
+                    errArr = np.mat(np.ones((sampleNum, 1))) #numpy 的array和mat 差飞了 不要混合运算
                     errArr[predictClass == labelMat.T] = 0
                     err = errArr.T*weight
                     if bestErr > err:
